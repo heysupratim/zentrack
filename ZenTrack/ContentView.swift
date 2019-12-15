@@ -70,12 +70,12 @@ func stringFormatted(time: Double)  -> String {
 }
 
 func deleteUserData(){
-    UserDefaults.standard.removeObject(forKey: "supratim")
+    UserDefaults.standard.removeObject(forKey: getTodaysDate())
     UserDefaults.standard.synchronize()
 }
 
 func exportData(appsTrackDict: [String: App]){
-    let fileName = "export.csv"
+    let fileName = getTodaysDate()+"app_usage.csv"
     var csvText = "App,Duration\n"
     for (_, value) in appsTrackDict {
         let newLine = "\(value.name),\(stringFormatted(time:value.duration))\n"
@@ -148,6 +148,18 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
+extension Date {
+    func string(format: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        return formatter.string(from: self)
+    }
+}
+
+func getTodaysDate() -> String {
+    return Date().string(format: "yyyy_MM_dd")
+}
+
 public class AppFetcher: ObservableObject {
 
     @Published var apps = [App]()
@@ -155,7 +167,8 @@ public class AppFetcher: ObservableObject {
     @Published var appTrackDict: [String: App] = [:]
     
     init(){
-        if let data = UserDefaults.standard.object(forKey: "supratim") {
+//        deleteUserData()
+        if let data = UserDefaults.standard.object(forKey: getTodaysDate()) {
             appTrackDict = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data as! Data) as! [String : App]
             apps = Array(appTrackDict.values)
         }
@@ -233,7 +246,7 @@ public class AppFetcher: ObservableObject {
                 }
             }
             let data = try? dataForDict(dict: appTrackDict)
-            UserDefaults.standard.set(data, forKey: "supratim")
+            UserDefaults.standard.set(data, forKey: getTodaysDate())
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
